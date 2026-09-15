@@ -1,11 +1,7 @@
-#!/usr/bin/env python3
-
 import datetime
 import json
 import re
 import sys
-
-
 def build(raw):
     vulns = raw["vulnerabilities"]
     today = datetime.date.today()
@@ -23,7 +19,6 @@ def build(raw):
         due_in = (datetime.date.fromisoformat(v["dueDate"]) - today).days
         if 0 <= due_in <= 14:
             due14 += 1
-
     recent = sorted(vulns, key=lambda v: v["dateAdded"], reverse=True)[:120]
     recent = [{
         "cve": v["cveID"],
@@ -36,7 +31,6 @@ def build(raw):
         "desc": v["shortDescription"],
         "action": v["requiredAction"],
     } for v in recent]
-
     return {
         "catalogVersion": raw["catalogVersion"],
         "dateReleased": raw["dateReleased"][:10],
@@ -49,8 +43,6 @@ def build(raw):
         "topVendors": sorted(vendors.items(), key=lambda kv: -kv[1])[:8],
         "recent": recent,
     }
-
-
 def main(feed_path, html_path):
     raw = json.load(open(feed_path, encoding="utf-8"))
     snap = build(raw)
@@ -64,8 +56,6 @@ def main(feed_path, html_path):
     open(html_path, "w", encoding="utf-8").write(html)
     print("Embedded catalog v" + snap["catalogVersion"], "with", snap["total"],
           "entries and", len(snap["recent"]), "recent entries (full text) into", html_path)
-
-
 if __name__ == "__main__":
     if len(sys.argv) != 3:
         sys.exit(__doc__)
