@@ -1,0 +1,38 @@
+name: refresh data
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Mirror the KEV catalog
+        run: curl -fsSL -o known_exploited_vulnerabilities.json https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json
+
+      - name: Rebuild the embedded snapshot
+        run: python build_snapshot.py known_exploited_vulnerabilities.json index.html
+
+      - name: Enrich CVSS and EPSS
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: python fetch_metrics.py index.html
+
+      - name: Commit if anything changed
+        run: |
+          git config user.name "ry-intel bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "daily data refresh"
+          git push
