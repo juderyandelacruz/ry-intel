@@ -17,10 +17,7 @@ jobs:
         run: curl -fsSL --retry 3 -A "Mozilla/5.0 (compatible; ry-intel-refresh)" -o known_exploited_vulnerabilities.json https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json
       - name: Rebuild the embedded snapshot
         run: python build_snapshot.py known_exploited_vulnerabilities.json index.html
-      - name: Enrich CVSS and EPSS
-        env:
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-          PYTHONUNBUFFERED: "1"
+      - name: Enrich EPSS
         run: python fetch_metrics.py index.html
       - name: Commit if anything changed
         run: |
