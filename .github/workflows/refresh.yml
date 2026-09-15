@@ -19,7 +19,7 @@ jobs:
           python-version: "3.12"
 
       - name: Mirror the KEV catalog
-        run: curl -fsSL -o known_exploited_vulnerabilities.json https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json
+        run: curl -fsSL --retry 3 -A "Mozilla/5.0 (compatible; ry-intel-refresh)" -o known_exploited_vulnerabilities.json https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json
 
       - name: Rebuild the embedded snapshot
         run: python build_snapshot.py known_exploited_vulnerabilities.json index.html
@@ -35,4 +35,8 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git add -A
           git diff --cached --quiet || git commit -m "daily data refresh"
+          # Pull any commits made elsewhere (e.g. a manual file upload through
+          # the GitHub UI) since this run started, so a concurrent write can
+          # never cause the push below to be rejected.
+          git pull --rebase --autostash origin main
           git push
